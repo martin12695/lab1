@@ -34,7 +34,7 @@ app.get('/list-business/:productID', function (req, res) {
             if (list_product) {
                 for (let i = 0; i < list_product.length; i++) {
                     let data = await  getBusinessDetail(list_product[i].businessID);
-                    list_business.push(data);
+                    list_business.push(JSON.parse(data));
                 }
             }
             res.json(list_business);
@@ -59,5 +59,4 @@ function getBusinessDetail(businessID) {
 var server = app.listen(8082, function () {
     var host = server.address().address;
     var port = server.address().port;
-    console.log("Example app listening at http://%s:%s", host, port)
 });
