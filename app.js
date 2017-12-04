@@ -1,16 +1,14 @@
-var express = require('express');
+let express = require('express');
 const mongodb = require('mongodb');
-var bodyParser = require('body-parser');
+let bodyParser = require('body-parser');
 const MongoClient = mongodb.MongoClient;
 const ObjectID = mongodb.ObjectID;
 const assert = require('assert');
 
-var app = express();
-var fs = require("fs");
+let app = express();
+let fs = require("fs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
-var server = "mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1";
 
 app.get('/listBusiness', function (req, res) {
     MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
@@ -47,9 +45,7 @@ app.post('/update/product/status', function (req, res) {
     });
 });
 
-var server = app.listen(8081, function () {
-
-    var host = server.address().address;
-    var port = server.address().port;
-
+let server = app.listen(8081, function () {
+    let host = server.address().address;
+    let port = server.address().port;
 });

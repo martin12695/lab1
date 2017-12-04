@@ -1,7 +1,7 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var app = express();
-var request = require('request');
+let express = require('express');
+let bodyParser = require('body-parser');
+let app = express();
+let request = require('request');
 
 const mongodb = require('mongodb');
 const MongoClient = mongodb.MongoClient;
@@ -56,7 +56,7 @@ function getBusinessDetail(businessID) {
     });
 }
 
-var server = app.listen(8082, function () {
-    var host = server.address().address;
-    var port = server.address().port;
+let server = app.listen(8082, function () {
+    let host = server.address().address;
+    let port = server.address().port;
 });
