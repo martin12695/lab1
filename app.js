@@ -5,11 +5,13 @@ const MongoClient = mongodb.MongoClient;
 const ObjectID = mongodb.ObjectID;
 const assert = require('assert');
 let request = require('request');
-
 let app = express();
+
 let fs = require("fs");
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+
 
 /**DANH SACH CAC DOANH NGHIEP TRONG BUSINESS DB*/
 app.get('/listBusiness', function (req, res) {
@@ -47,17 +49,42 @@ app.get('/businessDetail/:id', function (req, res) {
 });
 
 /**UPDATE SAN PHAM(producID) THUOC DOANH NGHIEP(businessID) NAO DUOC KHACH HANG(customerID) MUA VOI SO LUONG BAO NHIEU*/
-app.post('/update/product/status', function (req, res) {
+app.post('/update/product/status', async function (req, res) {
+    try {
+        let data = await insertProductSelling(req);
+        if(data){
+            res.redirect('/getProductSelling');
+        }
+    }catch (e){
+        res.json(e)
+    }
+});
+
+function insertProductSelling(req) {
+    return new Promise(function (resolve, reject) {
+        MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
+            assert.equal(null, err);
+            db.collection('product_selling').insertMany(req.body).then(function(err, numItems) {
+                db.close();
+                if(err) return reject(err);
+                resolve(1);
+            });
+        });
+    });
+}
+
+/**cap nhat db product_selling*/
+app.get('/getProductSelling', function (req, res) {
     MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
         assert.equal(null, err);
-        db.collection('product_selling').insertMany(req.body).then(function(numItems) {
+        db.collection('product_selling').find().toArray().then(function(numItems) {
             db.close();
-            res.json(1);
+            res.json(numItems)
         });
     });
 });
 
-let server = app.listen(8081, function () {
-    let host = server.address().address;
-    let port = server.address().port;
+let ser = app.listen(8081, function () {
+    let host = ser.address().address;
+    let port = ser.address().port;
 });

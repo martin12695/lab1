@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <title>TEST</title>
+    </head>
+    <body>
+
+    <script type="text/javascript" src="http://localhost:4200/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var socket = io.connect('http://localhost:4200');
+            socket.emit('request-update-product-selling', {request: true});
+            socket.on('response-update-product-selling', function (data) {
+                alert(data.data);
+            })
+        });
+    </script>
+    </body>
+</html>

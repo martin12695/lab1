@@ -1,12 +1,35 @@
 let express = require('express');
 let bodyParser = require('body-parser');
 let app = express();
-let request = require('request');
+let server = require('http').createServer(app);
+let io = require('socket.io')(server);
+server.listen(4200);
 
+let request = require('request');
 const mongodb = require('mongodb');
 const MongoClient = mongodb.MongoClient;
 const assert = require('assert');
+var engine = require('consolidate');
+
+app.set('views', __dirname);
+app.engine('html', engine.mustache);
+app.set('view engine', 'html');
+
 const dbClient1 = 'mongodb://client1:uitvn@ds127536.mlab.com:27536/lab1_client1';
+
+io.on('connection', function (socket) {
+    socket.on('request-update-product-selling', function (data) {
+        if(data.request){
+            request('http://localhost:8081/getProductSelling', function(error, response, data) {
+                if (!error && response.statusCode == 200) {
+                    setTimeout(function () {
+                        socket.emit('response-update-product-selling', {data: data});
+                    }, 1800000);//30 phút gui 1 lan
+                }
+            });
+        }
+    })
+});
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -103,7 +126,12 @@ function getBusinessDetail(businessID) {
     });
 }
 
-let server = app.listen(8082, function () {
-    let host = server.address().address;
-    let port = server.address().port;
+/**JOB QUAN LY, 30 PHUT CAP NHAT THONG TIN 1 LAN*/
+app.get('/list-product-selling-from-server', function (req, res) {
+    res.render('test');
+});
+
+let ser = app.listen(8082, function () {
+    let host = ser.address().address;
+    let port = ser.address().port;
 });
