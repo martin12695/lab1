@@ -48,14 +48,12 @@ app.get('/businessDetail/:id', function (req, res) {
     });
 });
 
-/**UPDATE SAN PHAM(producID) THUOC DOANH NGHIEP(businessID) NAO DUOC KHACH HANG(customerID) MUA VOI SO LUONG BAO NHIEU*/
+/**API Update thông tin mua hàng đươc gọi từ client server*/
 app.post('/update/product/status', async function (req, res) {
     try {
-        for(let test in req.body){
-            let data = await insertProductSelling(test);
-            if(data){
-                res.redirect('/getProductSelling');
-            }
+        let data = await insertProductSelling(req.body);
+        if(data){
+            res.redirect('/getProductSelling');
         }
     }catch (e){
         res.json(e)

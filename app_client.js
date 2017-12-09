@@ -2,59 +2,41 @@ let express = require('express');
 let bodyParser = require('body-parser');
 let app = express();
 let server = require('http').createServer(app);
-let io = require('socket.io')(server);
 server.listen(4200);
 
 let request = require('request');
 const mongodb = require('mongodb');
 const MongoClient = mongodb.MongoClient;
+const ObjectID = mongodb.ObjectID;
 const assert = require('assert');
-var engine = require('consolidate');
-
-app.set('views', __dirname);
-app.engine('html', engine.mustache);
-app.set('view engine', 'html');
 
 const dbClient1 = 'mongodb://client1:uitvn@ds127536.mlab.com:27536/lab1_client1';
 
-io.on('connection', function (socket) {
-    socket.on('request-update-product-selling', function (data) {
-        if(data.request){
-            request('http://localhost:8081/getProductSelling', function(error, response, data) {
-                if (!error && response.statusCode == 200) {
-                    setTimeout(function () {
-                        socket.emit('response-update-product-selling', {data: data});
-                    }, 1800000);//30 phút gui 1 lan
-                }
-            });
-        }
-    })
-});
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 
 /**GOI API CAP NHAT BEN PHIA SERVER TRA VE DANH SACH DOANH NGHIEP*/
 app.get('/list-business-from-server', function (req, res) {
-    request('http://localhost:8081/listBusiness', function(error, response, data) {
-    	if (!error && response.statusCode == 200) {
-    		res.json(data);
-  		}
+    request('http://localhost:8081/listBusiness', function (error, response, data) {
+        if (!error && response.statusCode == 200) {
+            res.json(data);
+        }
     });
 });
 
 /**CHI TIET KHACH HANG MUA SAN PHAM CUA CONG TY NAO*/
 app.get('/customerDetail', function (req, res) {
-    try{
-        MongoClient.connect(dbClient1, async function(err, db) {
+    try {
+        MongoClient.connect(dbClient1, async function (err, db) {
             if (err) throw err;
             const col = db.collection('product_selling');
             await col.aggregate([
                 // Join with user_info table
                 {
-                    $lookup:{
+                    $lookup: {
                         from: "customer",       // other table name
                         localField: "customerID",   // name of product_selling table field
                         foreignField: "customerID", // name of customer table field
@@ -63,30 +45,30 @@ app.get('/customerDetail', function (req, res) {
                 },
                 // Join with product table
                 {
-                    $lookup:{
+                    $lookup: {
                         from: "product",
                         localField: "businessID",
                         foreignField: "businessID",
                         as: "product_info"
                     }
                 },
-                {   $unwind:"$customer_info" },
-                {   $unwind:"$product_info" },
+                {$unwind: "$customer_info"},
+                {$unwind: "$product_info"},
                 {
-                    $project:{
-                        _id : 1,
+                    $project: {
+                        _id: 1,
                         quantity: 1,
-                        name : "$customer_info.name",
+                        name: "$customer_info.name",
                         address: "$customer_info.address",
-                        product_bought : "$product_info.name",
+                        product_bought: "$product_info.name",
                         product_price: "$product_info.price"
                     }
                 }
-            ],function (err,result) {
+            ], function (err, result) {
                 res.json(result);
             });
         });
-    }catch (e){
+    } catch (e) {
         res.json(e);
     }
 });
@@ -97,7 +79,7 @@ app.get('/list-business/:productID', function (req, res) {
             assert.equal(null, err);
             let list_business = [];
             let list_product = [];
-            await db.collection('product').find({"productID": req.params.productID}).toArray().then( function (products) {
+            await db.collection('product').find({"productID": req.params.productID}).toArray().then(function (products) {
                 db.close();
                 list_product = products;
             });
@@ -126,18 +108,14 @@ function getBusinessDetail(businessID) {
     });
 }
 
-/**JOB QUAN LY, 30 PHUT CAP NHAT THONG TIN 1 LAN*/
-app.get('/list-product-selling-from-server', function (req, res) {
-    res.render('test');
-});
-
+//API update sản phẩm vào client DB
 app.post('/update/product/status', async function (req, res) {
     try {
         let data = await insertProductSelling(req);
-        if(data){
+        if (data) {
             res.redirect('/getProductSelling');
         }
-    }catch (e){
+    } catch (e) {
         res.json(e)
     }
 });
@@ -146,9 +124,9 @@ function insertProductSelling(req) {
     return new Promise(function (resolve, reject) {
         MongoClient.connect(dbClient1, function (err, db) {
             assert.equal(null, err);
-            db.collection('product_selling').insertMany(req.body).then(function(err, numItems) {
+            db.collection('product_selling').insertMany(req.body).then(function (err, numItems) {
                 db.close();
-                if(err) return reject(err);
+                if (err) return reject(err);
                 resolve(1);
             });
         });
@@ -159,41 +137,44 @@ function updateProductToBusiness() {
     return new Promise(function (resolve, reject) {
         MongoClient.connect(dbClient1, function (err, db) {
             assert.equal(null, err);
-            db.collection('product_selling').find({status: 0}).toArray(function(err, result) {
-                db.close();
-                if(err) return reject(err);
+            db.collection('product_selling').find({status: 0}).toArray(function (err, result) {
+                if (err) return reject(err);
                 let temp = [];
-                for(let i in result){
+                db.collection('product_selling').updateMany(
+                    {status:0},
+                    {$set: {status: 1}}, function (err1, result1) {
+                        db.close();
+                    }
+                );
+                for (let i in result) {
                     temp.push({
                         customerID: result[i].customerID,
                         productID: result[i].productID,
                         businessID: result[i].businessID
                     })
                 }
-                console.log(temp);
                 resolve(temp);
             });
         });
     });
 }
 
-app.get('/abc', async function (req, res) {
+/**JOB QUAN LY, 30 PHUT CAP NHAT THONG TIN 1 LAN*/
+setInterval(async function () {
     try {
         let data = await updateProductToBusiness();
-        if(data){
+        if (data && data.length > 0) {
             request({
-                headers: {'content-type' : 'application/x-www-form-urlencoded'},
-                url:     'http://localhost:8081/update/product/status',
+                headers: {'content-type': 'application/json'},
+                url: 'http://localhost:8081/update/product/status',
                 method: "POST",
-                json: data
-            }, function(error, response, body){
-
+                body: JSON.stringify(data)
+            }, function (error, response, body) {
             });
         }
-    }catch (e){
-        res.json(e)
+    } catch (e) {
     }
-});
+},1800000);
 
 let ser = app.listen(8082, function () {
     let host = ser.address().address;
