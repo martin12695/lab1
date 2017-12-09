@@ -19,7 +19,7 @@ app.get('/listBusiness', function (req, res) {
         assert.equal(null, err);
         db.collection('business_info').find().toArray().then(function(numItems) {
             db.close();
-            res.json(numItems)
+            res.json({status: 200, message: "Get data done", numItems: numItems});
         });
     });
 });
@@ -51,9 +51,11 @@ app.get('/businessDetail/:id', function (req, res) {
 /**UPDATE SAN PHAM(producID) THUOC DOANH NGHIEP(businessID) NAO DUOC KHACH HANG(customerID) MUA VOI SO LUONG BAO NHIEU*/
 app.post('/update/product/status', async function (req, res) {
     try {
-        let data = await insertProductSelling(req);
-        if(data){
-            res.redirect('/getProductSelling');
+        for(let test in req.body){
+            let data = await insertProductSelling(test);
+            if(data){
+                res.redirect('/getProductSelling');
+            }
         }
     }catch (e){
         res.json(e)
@@ -64,7 +66,7 @@ function insertProductSelling(req) {
     return new Promise(function (resolve, reject) {
         MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
             assert.equal(null, err);
-            db.collection('product_selling').insertMany(req.body).then(function(err, numItems) {
+            db.collection('product_selling').insertMany(req).then(function(err, numItems) {
                 db.close();
                 if(err) return reject(err);
                 resolve(1);

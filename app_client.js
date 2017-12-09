@@ -131,6 +131,70 @@ app.get('/list-product-selling-from-server', function (req, res) {
     res.render('test');
 });
 
+app.post('/update/product/status', async function (req, res) {
+    try {
+        let data = await insertProductSelling(req);
+        if(data){
+            res.redirect('/getProductSelling');
+        }
+    }catch (e){
+        res.json(e)
+    }
+});
+
+function insertProductSelling(req) {
+    return new Promise(function (resolve, reject) {
+        MongoClient.connect(dbClient1, function (err, db) {
+            assert.equal(null, err);
+            db.collection('product_selling').insertMany(req.body).then(function(err, numItems) {
+                db.close();
+                if(err) return reject(err);
+                resolve(1);
+            });
+        });
+    });
+}
+
+function updateProductToBusiness() {
+    return new Promise(function (resolve, reject) {
+        MongoClient.connect(dbClient1, function (err, db) {
+            assert.equal(null, err);
+            db.collection('product_selling').find({status: 0}).toArray(function(err, result) {
+                db.close();
+                if(err) return reject(err);
+                let temp = [];
+                for(let i in result){
+                    temp.push({
+                        customerID: result[i].customerID,
+                        productID: result[i].productID,
+                        businessID: result[i].businessID
+                    })
+                }
+                console.log(temp);
+                resolve(temp);
+            });
+        });
+    });
+}
+
+app.get('/abc', async function (req, res) {
+    try {
+        let data = await updateProductToBusiness();
+        if(data){
+            request({
+                headers: {'content-type' : 'application/x-www-form-urlencoded'},
+                url:     'http://localhost:8081/update/product/status',
+                method: "POST",
+                json: data
+            }, function(error, response, body){
+
+            });
+        }
+    }catch (e){
+        res.json(e)
+    }
+});
+
 let ser = app.listen(8082, function () {
     let host = ser.address().address;
     let port = ser.address().port;
