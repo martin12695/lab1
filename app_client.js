@@ -85,8 +85,8 @@ app.get('/list-business/:productID', function (req, res) {
             });
             if (list_product) {
                 for (let i = 0; i < list_product.length; i++) {
-                    let data = await  getBusinessDetail(list_product[i].businessID);
-                    list_business.push(JSON.parse(data));
+                    let data = await  getBusinessDetail(list_product[i]);
+                    list_business.push(data);
                 }
             }
             res.json(list_business);
@@ -96,11 +96,34 @@ app.get('/list-business/:productID', function (req, res) {
     }
 });
 
-function getBusinessDetail(businessID) {
+app.get('/list-business-4p/:productID', function (req, res) {
+    try {
+        MongoClient.connect(dbClient1, async function (err, db) {
+            assert.equal(null, err);
+            let list_business = [];
+            let list_product = [];
+            await db.collection('product').find({"productID": req.params.productID}).sort( { price: 1 } ).toArray().then(function (products) {
+                db.close();
+                list_product = products;
+            });
+            if (list_product) {
+                for (let i = 0; i < list_product.length; i++) {
+                    let data = await getBusinessDetail(list_product[i]);
+                    list_business.push(data);
+                }
+            }
+            res.json(list_business);
+        });
+    } catch (e) {
+        console.log(e);
+    }
+});
+
+function getBusinessDetail(business) {
     return new Promise(function (resolve, reject) {
-        request('http://localhost:8081/businessDetail/' + businessID, function (error, res, body) {
+        request('http://localhost:8081/businessDetail/' + business.businessID, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                resolve(body);
+                resolve(Object.assign({}, JSON.parse(body), business));
             } else {
                 reject(error);
             }
