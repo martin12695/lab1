@@ -43,7 +43,7 @@ app.get('/businessCustomerDetail/:businessID/:productID', function (req, res) {
                         .find({"businessID": req.params.businessID, "productID": req.params.productID})
                         .toArray().then(async function (selling) {
                         if (selling) {
-                            res.json(Object.assign({}, businessInfo[0], {customer: selling}));
+                            res.json( Object.assign({}, businessInfo[0], {total : selling.length}, {customer : selling} ) );
                         }
                     });
                 }
