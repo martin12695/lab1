@@ -33,15 +33,23 @@ app.get('/customer-detail-from-client', function (req, res) {
     });
 });
 
-/**THONG TIN CHI TIET DOANH NGHIEP*/
-app.get('/businessDetail/:id', function (req, res) {
+/**THONG TIN CHI TIET DOANH NGHIEP VA SAN PHAM*/
+app.get('/businessCustomerDetail/:businessID/:productID', function (req, res) {
     MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
         assert.equal(null, err);
-        if (req.params.id){
-            db.collection('business_info').find({"businessID" : req.params.id}).toArray().then(function(numItems) {
-            db.close();
-            res.json(numItems[0]);
-        });
+        if (req.params.businessID && req.params.productID){
+            db.collection('business_info').find({"businessID" : req.params.businessID}).toArray().then(function(businessInfo) {
+                if (businessInfo) {
+                    db.collection('product_selling')
+                        .find({"businessID" : req.params.businessID,"productID" : req.params.productID})
+                        .toArray().then( async function(selling) {
+                        if (selling) {
+                            res.json( Object.assign({}, businessInfo[0], {customer : selling} ) );
+                        }
+                    });
+                }
+                db.close();
+            });
         } else {
             res.json(false);
         }

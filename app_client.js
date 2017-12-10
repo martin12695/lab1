@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.get('/list-business-from-server', function (req, res) {
     request('http://localhost:8081/listBusiness', function (error, response, data) {
         if (!error && response.statusCode == 200) {
-            res.json(data);
+            res.json(JSON.parse(data));
         }
     });
 });
@@ -85,7 +85,7 @@ app.get('/list-business/:productID', function (req, res) {
             });
             if (list_product) {
                 for (let i = 0; i < list_product.length; i++) {
-                    let data = await  getBusinessDetail(list_product[i]);
+                    let data = await getBusinessCustomerDetail(list_product[i]);
                     list_business.push(data);
                 }
             }
@@ -100,28 +100,28 @@ app.get('/list-business-4p/:productID', function (req, res) {
     try {
         MongoClient.connect(dbClient1, async function (err, db) {
             assert.equal(null, err);
-            let list_business = [];
-            let list_product = [];
+            let list_data = [];
+            let list_product_business = [];
             await db.collection('product').find({"productID": req.params.productID}).sort( { price: 1 } ).toArray().then(function (products) {
                 db.close();
-                list_product = products;
+                list_product_business = products;
             });
-            if (list_product) {
-                for (let i = 0; i < list_product.length; i++) {
-                    let data = await getBusinessDetail(list_product[i]);
-                    list_business.push(data);
+            if (list_product_business) {
+                for (let i = 0; i < list_product_business.length; i++) {
+                    let data = await getBusinessCustomerDetail(list_product_business[i]);
+                    list_data.push(data);
                 }
             }
-            res.json(list_business);
+            res.json(list_data);
         });
     } catch (e) {
         console.log(e);
     }
 });
 
-function getBusinessDetail(business) {
+function getBusinessCustomerDetail(business) {
     return new Promise(function (resolve, reject) {
-        request('http://localhost:8081/businessDetail/' + business.businessID, function (error, res, body) {
+        request('http://localhost:8081/businessCustomerDetail/' + business.businessID + '/' + business.productID, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 resolve(Object.assign({}, business, JSON.parse(body)));
             } else {
