@@ -123,7 +123,7 @@ function getBusinessDetail(business) {
     return new Promise(function (resolve, reject) {
         request('http://localhost:8081/businessDetail/' + business.businessID, function (error, res, body) {
             if (!error && res.statusCode == 200) {
-                resolve(Object.assign({}, JSON.parse(body), business));
+                resolve(Object.assign({}, business, JSON.parse(body)));
             } else {
                 reject(error);
             }

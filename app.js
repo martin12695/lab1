@@ -40,7 +40,7 @@ app.get('/businessDetail/:id', function (req, res) {
         if (req.params.id){
             db.collection('business_info').find({"businessID" : req.params.id}).toArray().then(function(numItems) {
             db.close();
-            res.json(numItems);
+            res.json(numItems[0]);
         });
         } else {
             res.json(false);
