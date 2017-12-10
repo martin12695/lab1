@@ -91,7 +91,7 @@ app.get('/getProductSelling', function (req, res) {
     });
 });
 
-/**cap nhat db product_selling*/
+/**Thong ke san pham doanh nghiep ban*/
 app.get('/getStatic', function (req, res) {
     MongoClient.connect('mongodb://admin:uitvn@ds127436.mlab.com:27436/lab1_business?authMechanism=SCRAM-SHA-1', function (err, db) {
         assert.equal(null, err);
